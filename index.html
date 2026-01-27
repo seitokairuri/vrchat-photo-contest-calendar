@@ -1,12 +1,15 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>VRChatフォトコンカレンダー</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Orbitron:wght@700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Orbitron:wght@700&display=swap"
+    rel="stylesheet">
   <style>
     :root {
       --bg-primary: #0a0a0f;
@@ -82,112 +85,20 @@
       }
     }
 
-    /* Calendar */
-    .calendar-section {
+    /* Event List Section */
+    .list-section {
       background: var(--bg-secondary);
       border-radius: 16px;
-      padding: 1rem;
+      padding: 1.5rem;
       border: 1px solid var(--border);
     }
 
-    .calendar-nav {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1rem;
-      padding: 0.5rem;
-    }
-
-    .calendar-nav button {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      color: var(--text-primary);
-      width: 40px;
-      height: 40px;
-      border-radius: 10px;
-      cursor: pointer;
-      font-size: 1.2rem;
-      transition: all 0.2s;
-    }
-
-    .calendar-nav button:hover {
-      background: var(--accent);
-      color: var(--bg-primary);
-      border-color: var(--accent);
-    }
-
-    .calendar-nav .month-year {
-      font-size: 1.2rem;
-      font-weight: 700;
-    }
-
-    .calendar-grid {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 4px;
-    }
-
-    .calendar-header {
-      text-align: center;
-      padding: 0.5rem;
-      font-size: 0.75rem;
+    .list-section h2 {
+      font-size: 1rem;
       color: var(--text-secondary);
-      font-weight: 500;
-    }
-
-    .calendar-day {
-      aspect-ratio: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      padding: 0.3rem;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.2s;
-      background: var(--bg-card);
-      border: 1px solid transparent;
-      min-height: 50px;
-    }
-
-    .calendar-day:hover {
-      border-color: var(--accent);
-      box-shadow: 0 0 10px var(--accent-glow);
-    }
-
-    .calendar-day.other-month {
-      opacity: 0.3;
-    }
-
-    .calendar-day.today {
-      border-color: var(--today);
-      box-shadow: 0 0 10px rgba(255, 107, 107, 0.3);
-    }
-
-    .calendar-day.today .day-number {
-      color: var(--today);
-    }
-
-    .calendar-day .day-number {
-      font-size: 0.85rem;
-      font-weight: 500;
-    }
-
-    .calendar-day .event-dot {
-      width: 6px;
-      height: 6px;
-      background: var(--accent);
-      border-radius: 50%;
-      margin-top: 4px;
-    }
-
-    .calendar-day.has-event {
-      background: var(--event-bg);
-    }
-
-    .calendar-day.selected {
-      border-color: var(--accent);
-      background: var(--event-bg);
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
     }
 
     /* Event Detail Panel */
@@ -256,6 +167,7 @@
       border-radius: 8px;
       border-left: 2px solid var(--border);
       word-break: break-word;
+      white-space: pre-wrap;
     }
 
     .event-value a {
@@ -269,13 +181,9 @@
 
     /* Event List */
     .event-list {
-      margin-top: 1rem;
-    }
-
-    .event-list-title {
-      font-size: 0.85rem;
-      color: var(--text-secondary);
-      margin-bottom: 0.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
     }
 
     .event-list-item {
@@ -304,6 +212,18 @@
       margin-top: 0.25rem;
     }
 
+    .event-list-item .remaining {
+      font-size: 0.75rem;
+      color: var(--accent);
+      margin-top: 0.25rem;
+      font-weight: 500;
+    }
+
+    .event-list-item .remaining.upcoming {
+      color: var(--text-secondary);
+      font-weight: 400;
+    }
+
     /* Loading */
     .loading {
       text-align: center;
@@ -325,7 +245,9 @@
     }
 
     @keyframes spin {
-      to { transform: rotate(360deg); }
+      to {
+        transform: rotate(360deg);
+      }
     }
 
     /* Scrollbar */
@@ -347,19 +269,15 @@
     }
   </style>
 </head>
+
 <body>
   <header class="header">
-    <h1>VRChat PhotoCon Calendar</h1>
+    <h1>VRChat Photo Contest Calendar</h1>
   </header>
 
   <main class="container">
-    <section class="calendar-section">
-      <div class="calendar-nav">
-        <button id="prevMonth">←</button>
-        <span class="month-year" id="monthYear"></span>
-        <button id="nextMonth">→</button>
-      </div>
-      <div class="calendar-grid" id="calendarGrid"></div>
+    <section class="list-section">
+      <h2>開催中・開催予定</h2>
       <div class="event-list" id="eventList"></div>
     </section>
 
@@ -377,40 +295,56 @@
     const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
 
     let events = [];
-    let currentDate = new Date();
-    let selectedDate = null;
 
-    // CSV解析
+    // CSV解析（改行を含むセルに対応）
     function parseCSV(csv) {
-      const lines = csv.split('\n');
       const result = [];
-      
-      for (let i = 1; i < lines.length; i++) {
-        if (!lines[i].trim()) continue;
-        
+      const rows = [];
+      let current = '';
+      let inQuotes = false;
+
+      // 改行を含むセルを考慮して行を分割
+      for (let i = 0; i < csv.length; i++) {
+        const char = csv[i];
+        if (char === '"') {
+          inQuotes = !inQuotes;
+          current += char;
+        } else if (char === '\n' && !inQuotes) {
+          if (current.trim()) rows.push(current);
+          current = '';
+        } else {
+          current += char;
+        }
+      }
+      if (current.trim()) rows.push(current);
+
+      // 各行をパース（ヘッダーをスキップ）
+      for (let i = 1; i < rows.length; i++) {
         const values = [];
-        let current = '';
-        let inQuotes = false;
-        
-        for (let char of lines[i]) {
+        let cell = '';
+        let cellInQuotes = false;
+
+        for (let j = 0; j < rows[i].length; j++) {
+          const char = rows[i][j];
           if (char === '"') {
-            inQuotes = !inQuotes;
-          } else if (char === ',' && !inQuotes) {
-            values.push(current.trim());
-            current = '';
+            cellInQuotes = !cellInQuotes;
+          } else if (char === ',' && !cellInQuotes) {
+            values.push(cell.trim());
+            cell = '';
           } else {
-            current += char;
+            cell += char;
           }
         }
-        values.push(current.trim());
-        
+        values.push(cell.trim());
+
         if (values[0]) {
           result.push({
             name: values[0] || '',
             startDate: parseDate(values[1]),
             endDate: parseDate(values[2]),
             description: values[3] || '',
-            url: values[4] || ''
+            howToApply: values[4] || '',
+            url: values[5] || ''
           });
         }
       }
@@ -445,7 +379,6 @@
         const response = await fetch(SHEET_URL);
         const csv = await response.text();
         events = parseCSV(csv);
-        renderCalendar();
         renderEventList();
       } catch (error) {
         console.error('データ取得エラー:', error);
@@ -453,117 +386,38 @@
       }
     }
 
-    // その日にイベントがあるか
-    function getEventsForDate(date) {
-      return events.filter(event => {
-        if (!event.startDate) return false;
-        const start = new Date(event.startDate);
-        start.setHours(0, 0, 0, 0);
-        const end = event.endDate ? new Date(event.endDate) : new Date(event.startDate);
-        end.setHours(23, 59, 59, 999);
-        const check = new Date(date);
-        check.setHours(12, 0, 0, 0);
-        return check >= start && check <= end;
-      });
-    }
-
-    // カレンダー描画
-    function renderCalendar() {
-      const year = currentDate.getFullYear();
-      const month = currentDate.getMonth();
-      
-      document.getElementById('monthYear').textContent = `${year}年 ${month + 1}月`;
-      
-      const firstDay = new Date(year, month, 1);
-      const lastDay = new Date(year, month + 1, 0);
-      const startDay = firstDay.getDay();
-      
-      const grid = document.getElementById('calendarGrid');
-      grid.innerHTML = '';
-      
-      // 曜日ヘッダー
-      const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
-      dayNames.forEach(day => {
-        const header = document.createElement('div');
-        header.className = 'calendar-header';
-        header.textContent = day;
-        grid.appendChild(header);
-      });
-      
-      // 前月の日
-      const prevMonthLastDay = new Date(year, month, 0).getDate();
-      for (let i = startDay - 1; i >= 0; i--) {
-        const dayEl = createDayElement(prevMonthLastDay - i, true, new Date(year, month - 1, prevMonthLastDay - i));
-        grid.appendChild(dayEl);
-      }
-      
-      // 今月の日
-      const today = new Date();
-      for (let i = 1; i <= lastDay.getDate(); i++) {
-        const date = new Date(year, month, i);
-        const isToday = date.toDateString() === today.toDateString();
-        const dayEl = createDayElement(i, false, date, isToday);
-        grid.appendChild(dayEl);
-      }
-      
-      // 次月の日
-      const remainingDays = 42 - (startDay + lastDay.getDate());
-      for (let i = 1; i <= remainingDays; i++) {
-        const dayEl = createDayElement(i, true, new Date(year, month + 1, i));
-        grid.appendChild(dayEl);
-      }
-    }
-
-    // 日のエレメント作成
-    function createDayElement(day, isOtherMonth, date, isToday = false) {
-      const dayEl = document.createElement('div');
-      dayEl.className = 'calendar-day';
-      if (isOtherMonth) dayEl.classList.add('other-month');
-      if (isToday) dayEl.classList.add('today');
-      
-      const dayEvents = getEventsForDate(date);
-      if (dayEvents.length > 0) {
-        dayEl.classList.add('has-event');
-      }
-      
-      if (selectedDate && date.toDateString() === selectedDate.toDateString()) {
-        dayEl.classList.add('selected');
-      }
-      
-      dayEl.innerHTML = `
-        <span class="day-number">${day}</span>
-        ${dayEvents.length > 0 ? '<span class="event-dot"></span>' : ''}
-      `;
-      
-      dayEl.addEventListener('click', () => {
-        selectedDate = date;
-        renderCalendar();
-        showEventDetail(dayEvents);
-      });
-      
-      return dayEl;
-    }
-
     // イベント詳細表示
     function showEventDetail(dayEvents) {
       const detail = document.getElementById('eventDetail');
-      
+
       if (dayEvents.length === 0) {
         detail.innerHTML = '<div class="no-event">この日のイベントはありません</div>';
         return;
       }
-      
+
       detail.innerHTML = dayEvents.map(event => `
         <div class="event-card">
           <div class="event-title">${escapeHtml(event.name)}</div>
           <div class="event-field">
-            <div class="event-label">日時</div>
-            <div class="event-value">${formatDate(event.startDate)}${event.endDate ? ' 〜 ' + formatDate(event.endDate) : ''}</div>
+            <div class="event-label">開始日</div>
+            <div class="event-value">${formatDate(event.startDate)}</div>
           </div>
+          ${event.endDate ? `
+          <div class="event-field">
+            <div class="event-label">終了日</div>
+            <div class="event-value">${formatDate(event.endDate)}</div>
+          </div>
+          ` : ''}
           ${event.description ? `
           <div class="event-field">
             <div class="event-label">説明</div>
             <div class="event-value">${escapeHtml(event.description)}</div>
+          </div>
+          ` : ''}
+          ${event.howToApply ? `
+          <div class="event-field">
+            <div class="event-label">応募方法</div>
+            <div class="event-value">${escapeHtml(event.howToApply)}</div>
           </div>
           ` : ''}
           ${event.url ? `
@@ -579,26 +433,45 @@
     // イベント一覧描画
     function renderEventList() {
       const list = document.getElementById('eventList');
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+
+      // 開催中（終了日でソート）
+      const ongoing = events
+        .filter(e => e.startDate && e.endDate && e.startDate <= now && e.endDate >= now)
+        .sort((a, b) => a.endDate - b.endDate);
+
+      // 未開催（開始日でソート）
       const upcoming = events
-        .filter(e => e.endDate && e.endDate >= new Date())
-        .sort((a, b) => a.startDate - b.startDate)
-        .slice(0, 5);
-      
-      if (upcoming.length === 0) {
-        list.innerHTML = '';
+        .filter(e => e.startDate && e.endDate && e.startDate > now)
+        .sort((a, b) => a.startDate - b.startDate);
+
+      const allEvents = [...ongoing, ...upcoming];
+
+      if (allEvents.length === 0) {
+        list.innerHTML = '<div class="no-event">現在開催中・開催予定のイベントはありません</div>';
         return;
       }
-      
-      list.innerHTML = `
-        <div class="event-list-title">開催中・開催予定</div>
-        ${upcoming.map(event => `
+
+      list.innerHTML = allEvents.map(event => {
+        const daysUntilEnd = Math.ceil((event.endDate - now) / (1000 * 60 * 60 * 24));
+        const isOngoing = event.startDate <= now;
+        let remainingText = '';
+        if (isOngoing) {
+          remainingText = daysUntilEnd === 0 ? '本日締め切り' : `終了まで${daysUntilEnd}日`;
+        } else {
+          const daysUntilStart = Math.ceil((event.startDate - now) / (1000 * 60 * 60 * 24));
+          remainingText = `開始まで${daysUntilStart}日`;
+        }
+        return `
           <div class="event-list-item" data-event="${escapeHtml(event.name)}">
             <div class="name">${escapeHtml(event.name)}</div>
-            <div class="date">${formatDate(event.startDate)}${event.endDate ? ' 〜' : ''}</div>
+            <div class="date">${formatDate(event.startDate)} 〜 ${formatDate(event.endDate)}</div>
+            <div class="remaining${isOngoing ? '' : ' upcoming'}">${remainingText}</div>
           </div>
-        `).join('')}
-      `;
-      
+        `;
+      }).join('');
+
       list.querySelectorAll('.event-list-item').forEach(item => {
         item.addEventListener('click', () => {
           const eventName = item.dataset.event;
@@ -617,20 +490,10 @@
       return div.innerHTML;
     }
 
-    // イベントリスナー
-    document.getElementById('prevMonth').addEventListener('click', () => {
-      currentDate.setMonth(currentDate.getMonth() - 1);
-      renderCalendar();
-    });
-
-    document.getElementById('nextMonth').addEventListener('click', () => {
-      currentDate.setMonth(currentDate.getMonth() + 1);
-      renderCalendar();
-    });
-
     // 初期化
-    document.getElementById('calendarGrid').innerHTML = '<div class="loading" style="grid-column: span 7;">読み込み中</div>';
+    document.getElementById('eventList').innerHTML = '<div class="loading">読み込み中</div>';
     fetchEvents();
   </script>
 </body>
+
 </html>
