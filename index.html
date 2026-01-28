@@ -299,6 +299,7 @@
     </section>
   </main>
 
+  <script async src="https://platform.twitter.com/widgets.js"></script>
   <script>
     // Google Sheets設定
     const SHEET_ID = '1-I3FZaJNQrtUhCXke4aGl2JGaFUBUfaKyBmUjflvaDY';
@@ -418,26 +419,12 @@
             <div class="event-value">${formatDate(event.endDate)}</div>
           </div>
           ` : ''}
-          ${event.description ? `
-          <div class="event-field">
-            <div class="event-label">説明</div>
-            <div class="event-value">${escapeHtml(event.description)}</div>
-          </div>
-          ` : ''}
-          ${event.howToApply ? `
-          <div class="event-field">
-            <div class="event-label">応募方法</div>
-            <div class="event-value">${escapeHtml(event.howToApply)}</div>
-          </div>
-          ` : ''}
-          ${event.url ? `
-          <div class="event-field">
-            <div class="event-label">URL</div>
-            <div class="event-value"><a href="${escapeHtml(event.url)}" target="_blank" rel="noopener">${escapeHtml(event.url)}</a></div>
-          </div>
-          ` : ''}
+          ${event.url ? renderUrlField(event.url) : ''}
         </div>
       `).join('');
+
+      // Twitter埋め込みを読み込む
+      setTimeout(loadTwitterEmbeds, 100);
     }
 
     // イベント一覧描画
@@ -498,6 +485,41 @@
       const div = document.createElement('div');
       div.textContent = text;
       return div.innerHTML;
+    }
+
+    // X(Twitter)のURLか判定してツイートIDを取得
+    function getTwitterTweetId(url) {
+      const match = url.match(/(?:twitter\.com|x\.com)\/\w+\/status\/(\d+)/);
+      return match ? match[1] : null;
+    }
+
+    // URLフィールドを描画（X埋め込み対応）
+    function renderUrlField(url) {
+      const tweetId = getTwitterTweetId(url);
+      if (tweetId) {
+        return `
+          <div class="event-field">
+            <div class="twitter-embed" data-tweet-id="${tweetId}"></div>
+          </div>
+        `;
+      }
+      return `
+        <div class="event-field">
+          <div class="event-label">URL</div>
+          <div class="event-value"><a href="${escapeHtml(url)}" target="_blank" rel="noopener">${escapeHtml(url)}</a></div>
+        </div>
+      `;
+    }
+
+    // Twitter埋め込みを読み込む
+    function loadTwitterEmbeds() {
+      document.querySelectorAll('.twitter-embed[data-tweet-id]').forEach(container => {
+        const tweetId = container.dataset.tweetId;
+        if (tweetId && window.twttr && !container.dataset.loaded) {
+          container.dataset.loaded = 'true';
+          twttr.widgets.createTweet(tweetId, container, { theme: 'dark' });
+        }
+      });
     }
 
     // 初期化
